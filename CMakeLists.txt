@@ -23,11 +23,11 @@ include_directories(${ASIO_DIR})
 add_subdirectory(${ASIO_DIR})
 list(APPEND PRJ_EXE_LIST ${asio_files})
 
-#[[asio2]]
-set(ASIO2_DIR ${PRJ_INC_DIR}/asio2)
-include_directories(${ASIO2_DIR})
-add_subdirectory(${ASIO2_DIR})
-list(APPEND PRJ_EXE_LIST ${asio2_files})
+#[[nlohmann]]
+set(NLOHMANN_DIR ${PRJ_INC_DIR}/nlohmann)
+include_directories(${NLOHMANN_DIR})
+file(GLOB nlohmann_header ${NLOHMANN_DIR}/*.hpp)
+list(APPEND PRJ_EXE_LIST ${nlohmann_header})
 
 #[[src]]
 add_subdirectory(${PRJ_SRC_DIR})
