@@ -1,16 +1,9 @@
 //
-// Created by 86137 on 2023/12/24.
+// Created by 86137 on 2023/12/29.
 //
 
-#ifndef ADAPTABLE_SERVER_VIEWS_HPP
-#define ADAPTABLE_SERVER_VIEWS_HPP
+#include "Views.hpp"
 
-#include "Connection.hpp"
-#include "string"
-#include "vector"
-#include "sstream"
-#include "fstream"
-#include "type_definer.hpp"
 
 ResBuffer get_music_list([[maybe_unused]] const Connection& connection) {
     vector<string> music_list;
@@ -27,6 +20,7 @@ ResBuffer get_music_list([[maybe_unused]] const Connection& connection) {
     return result;
 }
 
+
 ResBuffer send_file(const Connection& connection) {
     vector<string> url = connection.get_params();
     assert(url.size() == 1);
@@ -34,7 +28,6 @@ ResBuffer send_file(const Connection& connection) {
     string file_path = "./music/" + url[0]/*"test.hpp"*/;
     std::ifstream file(file_path, std::ios::binary);
     if (!file.is_open()) {
-        std::cout << "file not found" << std::endl;
         Connection error_response(connection.get_url(), {"failed"});
         file.close();
         ResBuffer error_result{error_response.to_buffer()};
@@ -50,5 +43,3 @@ ResBuffer send_file(const Connection& connection) {
 
     return result;
 }
-
-#endif //ADAPTABLE_SERVER_VIEWS_HPP

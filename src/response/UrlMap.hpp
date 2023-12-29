@@ -10,7 +10,7 @@
 
 #include "Connection.hpp"
 #include "Views.hpp"
-#include "type_definer.hpp"
+#include "../../include/type_definer.hpp"
 
 using std::map, std::string, std::vector;
 
