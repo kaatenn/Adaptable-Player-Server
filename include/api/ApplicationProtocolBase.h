@@ -59,6 +59,8 @@ namespace kaatenn {
 
         ApplicationProtocolBase(const ApplicationProtocolBase &) = delete;
 
+        ApplicationProtocolBase() = default;
+
         ApplicationProtocolBase &operator=(const ApplicationProtocolBase &) = delete;
     protected:
         std::string response;

@@ -7,17 +7,21 @@
 
 #include "asio.hpp"
 #include "string"
+#include "ApplicationProtocolBase.h"
 
 using std::string;
+using kaatenn::ApplicationProtocolBase;
 
 namespace kaatenn {
     class TCPServer {
     public:
-        explicit TCPServer(unsigned short port);
+        explicit TCPServer(unsigned short port, ApplicationProtocolBase* application_protocol);
 
         void start_receive();
 
         void run_server();
+
+        ApplicationProtocolBase* application_protocol;
 
     private:
         asio::io_context io_context;
@@ -26,17 +30,21 @@ namespace kaatenn {
         asio::ip::tcp::endpoint remote_endpoint;
         asio::ip::tcp::endpoint endpoint;
 
+
+
         std::thread asio_thread;
     };
 
 
     class TCPConnection : public std::enable_shared_from_this<TCPConnection> {
     public:
-        explicit TCPConnection(asio::ip::tcp::socket socket) : socket(std::move(socket)) {};
+        explicit TCPConnection(asio::ip::tcp::socket socket, ApplicationProtocolBase* application_protocol) : socket
+        (std::move(socket)), application_protocol(application_protocol) {};
 
         void start();
 
     private:
+        ApplicationProtocolBase* application_protocol;
 
         void do_read();
 

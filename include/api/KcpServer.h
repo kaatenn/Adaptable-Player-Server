@@ -9,11 +9,12 @@
 #include "ikcp.h"
 #include "string"
 #include "iostream"
+#include "ApplicationProtocolBase.h"
 
 namespace kaatenn {
     class KCPServer {
     public:
-        explicit KCPServer(unsigned short port);
+        explicit KCPServer(unsigned short port, ApplicationProtocolBase* application_protocol);
 
         ~KCPServer() {
             ikcp_release(kcp);
@@ -34,6 +35,8 @@ namespace kaatenn {
         std::array<char, 1024> receive_buffer{};
         std::array<char, 1024> file_buffer{};
         std::thread asio_thread;
+
+        ApplicationProtocolBase* application_protocol;
 
         ikcpcb *kcp;
         static int udp_output(const char *buf, int len, ikcpcb *kcp, void *user);

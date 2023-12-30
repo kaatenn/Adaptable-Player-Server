@@ -10,8 +10,8 @@
 
 using namespace kaatenn;
 
-TCPServer::TCPServer(unsigned short port) :socket(io_context),
-remote_endpoint(asio::ip::tcp::v4(), port), acceptor(io_context) {
+TCPServer::TCPServer(unsigned short port, ApplicationProtocolBase* protocol) :socket(io_context),
+remote_endpoint(asio::ip::tcp::v4(), port), acceptor(io_context), application_protocol(protocol) {
     check_port(port);
     acceptor.open(remote_endpoint.protocol());
     acceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
@@ -35,7 +35,7 @@ void TCPServer::run_server() {
 void TCPServer::start_receive() {
     acceptor.async_accept(socket, [this](const asio::error_code& ec) {
         if (!ec) {
-            std::make_shared<TCPConnection>(std::move(socket))->start(); // shaking hands
+            std::make_shared<TCPConnection>(std::move(socket), this->application_protocol)->start(); // shaking hands
         } else {
             std::cerr << "accept error: " << ec.message() << std::endl;
         }
@@ -54,31 +54,15 @@ void TCPConnection::do_read() {
             std::size_t
     byte_recv) {
         if (!ec) {
-            on_receive(receive_buffer.data(), byte_recv);
+            if (application_protocol->process_segment(receive_buffer.data(), byte_recv)) {
+                string response = application_protocol->get_response();
+                send(response.data(), response.size());
+            }
         } else {
             std::cerr << "read error: " << ec.message() << std::endl;
         }
     });
-}
-
-void TCPConnection::on_receive(char* data, size_t recvd) {
-    ending_assert_string.append(data, recvd);
-    Connection connection = Connection::from_json(ending_assert_string);
-    if (connection.get_url() != "error") {
-        string url = connection.get_url();
-        if (url_map.count(url) != 0) {
-            ResBuffer res_buffer = url_map[url](connection);
-            int segment_size = 1024;
-            for (const auto& buffer : res_buffer) {
-                for (int i = 0; i < buffer.size(); i += segment_size) {
-                    int size = std::min(segment_size, (int)buffer.size() - i);
-                    this->send(buffer.data() + i, size);
-                }
-            }
-        }
-        ending_assert_string.clear();
-    }
-    do_read();
+    start();
 }
 
 void TCPConnection::send(const char *data, size_t length) {
