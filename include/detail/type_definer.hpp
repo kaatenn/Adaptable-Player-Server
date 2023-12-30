@@ -9,6 +9,6 @@
 
 using std::vector;
 
-using ResBuffer = vector<vector<char>>;
+typedef vector<vector<char>> ResBuffer;
 
 #endif //ADAPTABLE_SERVER_TYPE_DEFINER_HPP

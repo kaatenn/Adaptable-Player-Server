@@ -5,14 +5,14 @@
 #ifndef ADAPTABLE_SERVER_VIEWS_HPP
 #define ADAPTABLE_SERVER_VIEWS_HPP
 
-#include "Connection.hpp"
 #include "string"
 #include "vector"
 #include "sstream"
 #include "fstream"
-#include "../../include/type_definer.hpp"
+#include "detail/type_definer.hpp"
+#include "EP.h"
 
-ResBuffer get_music_list([[maybe_unused]] const Connection& connection);
-ResBuffer send_file(const Connection& connection);
+std::string get_music_list([[maybe_unused]]EP& Ep);
+std::string send_file(EP& Ep);
 
 #endif //ADAPTABLE_SERVER_VIEWS_HPP

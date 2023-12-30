@@ -8,20 +8,17 @@
 #include "map"
 #include "string"
 
-#include "Connection.hpp"
+#include "example/ExampleApplicationProtocol/EP.h"
 #include "Views.hpp"
-#include "../../include/type_definer.hpp"
+#include "detail/type_definer.hpp"
 
 using std::map, std::string, std::vector;
 
-using HandlerFunction = ResBuffer(*)(const Connection&);
+using HandlerFunction = string(*)(EP&);
 
 static map<string, HandlerFunction> url_map = {
         {"music_list", get_music_list},
         {"file", send_file}
 };
 
-static vector<string> file_need_url = {
-        "file"
-};
 #endif //ADAPTABLE_SERVER_URLMAP_HPP

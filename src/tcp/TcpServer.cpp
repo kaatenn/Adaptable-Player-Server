@@ -2,25 +2,34 @@
 // Created by 86137 on 2023/12/28.
 //
 
-#include "../../include/TcpServer.h"
-#include "response/UrlMap.hpp"
+#include "api/TcpServer.h"
+#include "example/ExampleApplicationProtocol/UrlMap.hpp"
+#include "detail/error_handler.h"
 #include <iostream>
-#include <Connection.hpp>
+#include "example/Connection.hpp"
 
-TCPServer::TCPServer(asio::io_context &io_context, unsigned short port) :io_context(io_context), socket(io_context),
+using namespace kaatenn;
+
+TCPServer::TCPServer(unsigned short port) :socket(io_context),
 remote_endpoint(asio::ip::tcp::v4(), port), acceptor(io_context) {
+    check_port(port);
     acceptor.open(remote_endpoint.protocol());
     acceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
     acceptor.bind(remote_endpoint);
     asio::error_code ec;
     acceptor.listen(asio::socket_base::max_listen_connections, ec);
-    if (ec) {
+    /*if (ec) {
         std::cerr << "acceptor listen error: " << ec.message() << std::endl;
         exit(1);
     } else {
         std::cout << "acceptor listen on port: " << port << std::endl;
-    }
+    }*/
     start_receive();
+    asio_thread = std::thread([this]() { io_context.run(); });
+}
+
+void TCPServer::run_server() {
+    asio_thread.join();
 }
 
 void TCPServer::start_receive() {
@@ -41,7 +50,9 @@ void TCPConnection::start() {
 void TCPConnection::do_read() {
     auto self(shared_from_this());
     receive_buffer.fill(0);
-    socket.async_read_some(asio::buffer(receive_buffer), [this, self](std::error_code ec, std::size_t byte_recv) {
+    socket.async_read_some(asio::buffer(receive_buffer), [this, self](std::error_code ec,
+            std::size_t
+    byte_recv) {
         if (!ec) {
             on_receive(receive_buffer.data(), byte_recv);
         } else {

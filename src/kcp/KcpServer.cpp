@@ -2,14 +2,40 @@
 // Created by 86137 on 2023/12/17.
 //
 
-#include "../../include/KcpServer.h"
-#include "response/UrlMap.hpp"
+#include "api/KcpServer.h"
+#include "example/ExampleApplicationProtocol/UrlMap.hpp"
 #include "fstream"
 #include "string"
-#include "Connection.hpp"
+#include "example/Connection.hpp"
+#include "detail/error_handler.h"
 
 
 using std::string;
+using namespace kaatenn;
+
+KCPServer::KCPServer(unsigned short port)
+        : socket(io_context, asio::ip::udp::endpoint(asio::ip::udp::v4(), port)) {
+    check_port(port);
+
+    // init kcp
+    kcp = ikcp_create(0x11223344, (void*)this);
+    ikcp_setoutput(kcp, &KCPServer::udp_output);
+
+    // add timer
+    this->timer = new asio::steady_timer(io_context, asio::chrono::milliseconds(10));
+    timer->async_wait([this](std::error_code ec) {
+        if (!ec) {
+            this->update();
+        }
+    });
+    start_receive();
+
+    asio_thread = std::thread([this]() { io_context.run(); });
+}
+
+void KCPServer::run_server() {
+    asio_thread.join();
+}
 
 void KCPServer::start_receive() {
     socket.async_receive_from(
@@ -85,21 +111,6 @@ int KCPServer::udp_output(const char *buf, int len, ikcpcb *kcp, void *user) {
         }
     });
     return 0;
-}
-
-KCPServer::KCPServer(asio::io_context &io_context, unsigned short port)
-        : io_context(io_context), socket(io_context, asio::ip::udp::endpoint(asio::ip::udp::v4(), port)) {
-    // init kcp
-    kcp = ikcp_create(0x11223344, (void*)this);
-    ikcp_setoutput(kcp, &KCPServer::udp_output);
-
-    // add timer
-    this->timer = new asio::steady_timer(io_context, asio::chrono::milliseconds(10));
-    timer->async_wait([this](std::error_code ec) {
-        if (!ec) {
-            this->update();
-        }
-    });
 }
 
 void KCPServer::send(const char *data, size_t length) {

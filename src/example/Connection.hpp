@@ -5,7 +5,7 @@
 #ifndef ADAPTABLE_UPLOADER_CONNECTION_HPP
 #define ADAPTABLE_UPLOADER_CONNECTION_HPP
 
-#include <utility>
+
 
 #include "json.hpp"
 #include "string"
