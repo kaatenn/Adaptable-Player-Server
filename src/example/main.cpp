@@ -13,7 +13,7 @@ int main() {
         // kcp asio init
         EP ep_kcp;
         unsigned short port = 12345;
-        KCPServer server(port, &ep_kcp);
+        KCPServer server(port, &ep_kcp, 0x11223344);
 
         // tcp asio init
         EP ep_tcp;

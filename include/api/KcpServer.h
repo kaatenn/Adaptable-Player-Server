@@ -14,7 +14,7 @@
 namespace kaatenn {
     class KCPServer {
     public:
-        explicit KCPServer(unsigned short port, ApplicationProtocolBase* application_protocol);
+        explicit KCPServer(unsigned short port, ApplicationProtocolBase* application_protocol, IUINT32 kcp_conv);
 
         ~KCPServer() {
             ikcp_release(kcp);
@@ -35,6 +35,7 @@ namespace kaatenn {
         std::array<char, 1024> receive_buffer{};
         std::array<char, 1024> file_buffer{};
         std::thread asio_thread;
+        IUINT32 kcp_conv;
 
         ApplicationProtocolBase* application_protocol;
 

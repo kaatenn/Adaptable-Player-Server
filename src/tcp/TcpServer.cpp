@@ -1,7 +1,3 @@
-//
-// Created by 86137 on 2023/12/28.
-//
-
 #include "api/TcpServer.h"
 #include "example/ExampleApplicationProtocol/UrlMap.hpp"
 #include "detail/error_handler.h"
@@ -57,12 +53,14 @@ void TCPConnection::do_read() {
             if (application_protocol->process_segment(receive_buffer.data(), byte_recv)) {
                 string response = application_protocol->get_response();
                 send(response.data(), response.size());
+                application_protocol->reset();
             }
+            start();
         } else {
             std::cerr << "read error: " << ec.message() << std::endl;
+            exit(EXIT_FAILURE);
         }
     });
-    start();
 }
 
 void TCPConnection::send(const char *data, size_t length) {

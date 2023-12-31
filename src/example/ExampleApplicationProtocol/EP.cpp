@@ -8,7 +8,8 @@
 
 bool EP::process_segment(char *segment, int recv_size) {
     receive_buffer.append(segment, recv_size);
-    if (length == 0) {
+    if (length == 0 || length == 6) {
+        // length == 6 means that the init of the instance with length 0 + 0 + 0 + 6
         if (receive_buffer.size() >= 4) {
             length = *(int *) receive_buffer.data();
             receive_buffer.erase(0, 4);
@@ -18,7 +19,7 @@ bool EP::process_segment(char *segment, int recv_size) {
     }
     if (url_length == 0) {
         if (receive_buffer.size() >= 1) {
-            url_length = *(int *) receive_buffer.data();
+            url_length = *(char *) receive_buffer.data();
             receive_buffer.erase(0, 1);
         } else {
             return false;
@@ -26,7 +27,7 @@ bool EP::process_segment(char *segment, int recv_size) {
     }
     if (param_length == 0) {
         if (receive_buffer.size() >= 1) {
-            param_length = *(int *) receive_buffer.data();
+            param_length = *(char *) receive_buffer.data();
             receive_buffer.erase(0, 1);
         } else {
             return false;
@@ -53,12 +54,14 @@ bool EP::process_segment(char *segment, int recv_size) {
         if (receive_buffer.size() >= file_length) {
             file_stream = receive_buffer.substr(0, file_length);
             receive_buffer.erase(0, file_length);
-            nlohmann::json json;
-            json = nlohmann::json::parse(params);
-            std::string file_name = json["file_name"];
-            std::ofstream fout("music/" + file_name, std::ios::binary);
-            fout.write(file_stream.data(), file_stream.size());
-            fout.close();
+            if (!params.empty()) {
+                nlohmann::json json;
+                json = nlohmann::json::parse(params);
+                std::string file_name = json["file_name"];
+                std::ofstream fout("music/" + file_name, std::ios::binary);
+                fout.write(file_stream.data(), file_stream.size());
+                fout.close();
+            }
         } else {
             return false;
         }
@@ -77,11 +80,12 @@ std::string EP::get_params() const {
 void EP::generate_response() {
     std::string res_data = url_map[url](*this);
     int res_file_len = res_data.size() - res_param_length;
-    int res_len = 6 + url_length + param_length + res_file_len;
+    int res_len = 6 + url_length + res_param_length + res_file_len;
     std::string res;
+    res.resize(0);
     res.append((char *) &res_len, 4);
     res.append((char *) &url_length, 1);
-    res.append((char *) &param_length, 1);
+    res.append((char *) &res_param_length, 1);
     res.append(url);
     res.append(res_data); // res_data = res_params + res_file_stream
     this->response = res;
@@ -92,7 +96,7 @@ std::string EP::get_response() {
     return response;
 }
 
-std::string EP::serialize() {
+std::string EP::serialize() const {
     std::string result;
     result.append((char *) &length, 4);
     result.append((char *) &url_length, 1);
@@ -105,4 +109,42 @@ std::string EP::serialize() {
 
 void EP::error_handler() {
     // This is just a demo, so we do not need to handle errors.
+}
+
+void EP::reset() {
+    length = 0;
+    url_length = 0;
+    param_length = 0;
+    file_length = 0;
+    res_param_length = 0;
+    receive_buffer.clear();
+    url.clear();
+    params.clear();
+    file_stream.clear();
+    response.clear();
+    if (fin.is_open())
+        fin.close();
+}
+
+string EP::get_url() const {
+    return url;
+}
+
+EP::EP(std::string url, std::string params, std::string file_stream) : url(std::move(url)), params(std::move(params)),
+                                                                       file_stream(std::move(file_stream)) {
+    url_length = this->url.size();
+    param_length = this->params.size();
+    file_length = this->file_stream.size();
+    length = 6 + url_length + param_length + file_length;
+}
+
+EP EP::deserialize(const string &data) {
+    EP ep;
+    ep.length = *(int *) data.data();
+    ep.url_length = *(char *) (data.data() + 4);
+    ep.param_length = *(char *) (data.data() + 5);
+    ep.url = data.substr(6, ep.url_length);
+    ep.params = data.substr(6 + ep.url_length, ep.param_length);
+    ep.file_stream = data.substr(6 + ep.url_length + ep.param_length);
+    return ep;
 }

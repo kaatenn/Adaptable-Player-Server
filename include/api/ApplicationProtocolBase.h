@@ -19,7 +19,7 @@ namespace kaatenn {
          *
          * @return A string representation of the object's state.
          */
-        virtual std::string serialize() = 0;
+        [[nodiscard]] virtual std::string serialize() const = 0;
 
 
         /**
@@ -52,14 +52,18 @@ namespace kaatenn {
          */
         virtual std::string get_response() = 0;
 
+        virtual std::string get_params() const = 0;
+
+        virtual void reset() = 0;
+
         // Rule of five: allowing move operations while preventing copy operations.
+        ApplicationProtocolBase() = default;
+
         ApplicationProtocolBase(ApplicationProtocolBase &&) noexcept = default;
 
         ApplicationProtocolBase &operator=(ApplicationProtocolBase &&) noexcept = default;
 
         ApplicationProtocolBase(const ApplicationProtocolBase &) = delete;
-
-        ApplicationProtocolBase() = default;
 
         ApplicationProtocolBase &operator=(const ApplicationProtocolBase &) = delete;
     protected:

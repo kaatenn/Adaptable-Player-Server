@@ -30,8 +30,6 @@ namespace kaatenn {
         asio::ip::tcp::endpoint remote_endpoint;
         asio::ip::tcp::endpoint endpoint;
 
-
-
         std::thread asio_thread;
     };
 

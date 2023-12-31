@@ -13,13 +13,13 @@
 using std::string;
 using namespace kaatenn;
 
-KCPServer::KCPServer(unsigned short port, ApplicationProtocolBase *application_protocol)
+KCPServer::KCPServer(unsigned short port, ApplicationProtocolBase *application_protocol, IUINT32 kcp_conv)
         : socket(io_context, asio::ip::udp::endpoint(asio::ip::udp::v4(), port)),
-          application_protocol(application_protocol) {
+          application_protocol(application_protocol), kcp_conv(kcp_conv) {
     check_port(port);
 
     // init kcp
-    kcp = ikcp_create(0x11223344, (void *) this);
+    kcp = ikcp_create(kcp_conv, (void *) this);
     ikcp_setoutput(kcp, &KCPServer::udp_output);
 
     // add timer
@@ -44,6 +44,9 @@ void KCPServer::start_receive() {
             [this](std::error_code ec, std::size_t bytes_recvd) {
                 if (!ec && bytes_recvd > 0) {
                     on_receive(receive_buffer.data(), bytes_recvd);
+                } else {
+                    std::cout << "receive error: " << ec.message() << std::endl;
+                    exit(EXIT_FAILURE);
                 }
             }
     );
@@ -58,6 +61,7 @@ void KCPServer::on_receive(const char *data, size_t length) {
         if (application_protocol->process_segment(file_buffer.data(), recv_size)) {
             res = application_protocol->get_response();
             this->send(res.data(), res.size());
+            application_protocol->reset();
         }
     }
     socket.connect(remote_endpoint);

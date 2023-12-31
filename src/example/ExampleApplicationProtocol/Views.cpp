@@ -18,6 +18,7 @@ std::string get_music_list([[maybe_unused]]EP& ep) {
     nlohmann::json json;
     json["music_list"] = music_list;
     std::string res_params = json.dump();
+    ep.set_res_data_length(res_params.size());
     return res_params;
 }
 
@@ -28,6 +29,9 @@ std::string send_file(EP& ep) {
     json = nlohmann::json::parse(params);
     std::string file_name = json["file_name"];
     std::ifstream file("music/" + file_name, std::ios::binary);
+    if (!file.is_open()) {
+        return "File not found";
+    }
     std::string file_content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     nlohmann::json res_json;
     res_json["file_name"] = file_name;
