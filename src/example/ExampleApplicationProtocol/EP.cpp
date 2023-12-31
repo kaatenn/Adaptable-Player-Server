@@ -57,10 +57,12 @@ bool EP::process_segment(char *segment, int recv_size) {
             if (!params.empty()) {
                 nlohmann::json json;
                 json = nlohmann::json::parse(params);
-                std::string file_name = json["file_name"];
-                std::ofstream fout("music/" + file_name, std::ios::binary);
-                fout.write(file_stream.data(), file_stream.size());
-                fout.close();
+                if (json.contains("file_name")) {
+                    std::string file_name = json["file_name"];
+                    std::ofstream fout("music/" + file_name, std::ios::binary);
+                    fout.write(file_stream.data(), file_stream.size());
+                    fout.close();
+                }
             }
         } else {
             return false;
@@ -147,4 +149,8 @@ EP EP::deserialize(const string &data) {
     ep.params = data.substr(6 + ep.url_length, ep.param_length);
     ep.file_stream = data.substr(6 + ep.url_length + ep.param_length);
     return ep;
+}
+
+std::string EP::get_file_stream() const {
+    return file_stream;
 }

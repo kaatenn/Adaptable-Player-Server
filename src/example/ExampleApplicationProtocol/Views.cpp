@@ -27,7 +27,7 @@ std::string send_file(EP& ep) {
     nlohmann::json json;
     std::string params = ep.get_params();
     json = nlohmann::json::parse(params);
-    std::string file_name = json["file_name"];
+    std::string file_name = json["searching_file_name"];
     std::ifstream file("music/" + file_name, std::ios::binary);
     if (!file.is_open()) {
         return "File not found";
